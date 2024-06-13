@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>animation</title>
+        <style>
+            body {
+                background-color: #222222;
+                color: white;
+                font-size: 18pt;
+                font-family: sans-serif;
+                cursor: default;
+            }
+
+            div.animation {
+                display: block;
+                width: 800px;
+                height: 700px;
+                margin: 10px auto;
+                position: relative;
+                overflow: hidden;
+            }
+
+            div.slide {
+                height: 100%;
+                width: 100%;
+            }
+
+            div.controlles {
+                display: block;
+                width: max-content;
+                margin: auto;
+            }
+
+            div.message {
+                display: inline-block;
+                width: 800px;
+                color: white;
+                vertical-align: middle;
+            }
+
+            div.side {
+                display: inline-block;
+                color: white;
+                max-width: 600px;
+                vertical-align: middle;
+            }
+
+            h1 {
+                text-align: center;
+            }
+
+            h1.titre {
+                width: 100%;
+                margin-top: 200px;
+                font-size: 48pt;
+            }
+
+            figure {
+                border: 1px solid white;
+                padding: 5px;
+            }
+
+            figcaption {
+                text-align: justify;
+            }
+
+            button {
+                background: none;
+                border: none;
+                width: 80px;
+                text-align: center;
+                font-size: 48pt;
+                color: white;
+                cursor: pointer;
+                vertical-align: middle;
+                margin: 0px 20px;
+            }
+
+            .lexique {
+                font-style: italic;
+                text-decoration: underline;
+                cursor: pointer;
+            }
+
+            .animated {
+                position: absolute;
+                transition: transform 0.5s ease;
+                transform:
+                    var(--t1,)
+                    var(--t2,);
+            }
+
+            .rotated {
+                --t1: perspective(600px) rotateY(30deg);
+            }
+
+            .antirotated {
+                --t1: perspective(600px) rotateY(-30deg);
+            }
+
+            .absent {
+                --t2: translate(0px, 900px);
+            }
+
+            span.math {
+                white-space: nowrap;
+            }
+
+            span.frac {
+                display: inline-block;
+                position: relative;
+                vertical-align: middle;
+            }
+
+            span.haut{
+                display: block;
+                text-align: center;
+            }
+
+            span.bas{
+                display: block;
+                border-top: 2px solid;
+                text-align: center;
+            }
+
+            table {
+                text-align: center;
+                border-collapse: collapse;
+            }
+
+            div.centrer {
+                display: block;
+                width: max-content;
+                margin: auto;
+            }
+
+            .raster td, div.pixel {
+                width: 40px;
+                height: 40px;
+                border: 1px solid black;
+            }
+
+            div.pixel {
+                display:inline-block;
+                vertical-align:middle;
+                margin: 2px;
+            }
+
+            div.grand-pixel {
+                display: inline-block;
+                width: 210px;
+                height: 210px;
+                vertical-align: middle;
+                position: relative;
+            }
+
+            .grand-raster td {
+                width: 125px;
+                height: 125px;
+                font-size: 12pt;
+                border: 1px solid black;
+            }
+
+            p {
+                margin: 10px 0px;
+                text-align: justify;
+            }
+
+            p.centrer{
+                text-align: center;
+            }
+
+            figure img {
+                margin: auto;
+                display: block;
+            }
+
+            div.cliquable {
+                position: absolute;
+                bottom: 0px;
+                right: 0px;
+                display: inline-block;
+                width: max-content;
+                cursor: pointer;
+                border: 1px solid white;
+                text-decoration: underline;
+                padding: 10px;
+                border: 1px solid white;
+            }
+
+            p.enbas {
+                position: absolute;
+                top: 210px;
+                text-align: center;
+                width: 210px;
+            }
+
+            #canvasCacherOctets {
+                width: 362px;
+                height: 362px;
+                position: absolute;
+                top: 0px;
+                left: -50px;
+            }
+
+            #canvasCacherExercice {
+                width: 532px;
+                height: 200px;
+                position: absolute;
+                top: 25px;
+                left: -50px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="animation">
+            <div id="1.Principe" class="slide animated absent">
+                <h1 class="titre">1. Le principe</h1>
+            </div>
+            <div id="definition" class="slide animated absent">
+                <h1>La stéganographie</h1>
+                <p><b>Définition :</b> La stéganographie est la pratique de dissimulation d'une information dans une autre information.</p>
+                <figure>
+                    <figcaption><b>Exemple : </b>Le mot <i>secret</i> se cache dans cette définition :</figcaption>
+                    <p style="text-align: justify; line-height: 150%;">Steganography i&#804;s the practice of represen&#804;ting informat&#804;ion within another mes&#803;sage&#804; or physical objec&#803;t, i&#803;n such a manne&#803;r that the presen&#803;c&#803;e of the infor&#804;mation is n&#804;ot evide&#804;nt to human inspe&#803;ct&#804;ion.</p>
+                </figure>
+            </div>
+            <div id="cacherOctet" class="slide animated absent">
+                <h1>Cacher de l'information dans une image</h1>
+                <p>Nous allons cacher de l'information écrite en binaire parmi les bits permettant de décrire la couleur des pixels de l'image.</p>
+                <p>Admettons que nous devons cacher une information codée sur 1&nbsp;octet (c'est-à-dire 8 bits) dans une image de 200&times;200 pixels.</p>
+                <p>Si l'image est codée en RGB avec une profondeur de 24 bits, alors pour chaque pixel nous disposons de 24 bits pour cacher de l'information. Et comme il y a <span class=math">200 &times; 200 = 40 000</span> pixels, nous disposons de <span class="math">40 000 &times 24 = 960 000</span> bits pour le faire.</p>
+            </div>
+            <div id="cacherOctetExemple" class="slide animated absent">
+                <h1>Cacher de l'information dans une image</h1>
+                <figure>
+                    <figcaption><b>Exemple :</b> il existe environ <span class="math">8,7 &times; 10<sup>12</sup></span> façons de cacher ces 8 bits dans cette image de 15 pixels.</figcaption>
+                    <p class="centrer">bits à cacher : 1001 1100</p>
+                    <div class="centrer">
+                        <table class="grand-raster">
+                            <tr>
+                                <td style="background-color:#39b9f8; color:black;">
+                                    R = 0011 1000<br/>
+                                    V = 1011 1001<br/>
+                                    B = 1111 1000
+                                </td>
+                                <td style="background-color:#39b9f8; color:black;">
+                                    R = 0011 1000<br/>
+                                    V = 1011 1001<br/>
+                                    B = 1111 1000
+                                </td>
+                                <td style="background-color:#39b9f8; color:black;">
+                                    R = 0011 1000<br/>
+                                    V = 1011 1001<br/>
+                                    B = 1111 1000
+                                </td>
+                                <td style="background-color:#efefef; color:black;">
+                                    R = 1110 1111<br/>
+                                    V = 1110 1111<br/>
+                                    B = 1110 1111
+                                </td>
+                                <td style="background-color:#efefef; color:black;">
+                                    R = 1110 1111<br/>
+                                    V = 1110 1111<br/>
+                                    B = 1110 1111
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="background-color:#39b9f8; color:black;">
+                                    R = 0011 1000<br/>
+                                    V = 1011 1001<br/>
+                                    B = 1111 1000
+                                </td>
+                                <td style="background-color:#08ee7a; color:black;">
+                                    R = 0000 1000<br/>
+                                    V = 1110 1110<br/>
+                                    B = 0111 1010
+                                </td>
+                                <td style="background-color:#39b9f8; color:black;">
+                                    R = 0011 1000<br/>
+                                    V = 1011 1001<br/>
+                                    B = 1111 1000
+                                </td>
+                                <td style="background-color:#39b9f8; color:black;">
+                                    R = 0011 1000<br/>
+                                    V = 1011 1001<br/>
+                                    B = 1111 1000
+                                </td>
+                                <td style="background-color:#39b9f8; color:black;">
+                                    R = 0011 1000<br/>
+                                    V = 1011 1001<br/>
+                                    B = 1111 1000
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="background-color:#f8c438; color:black;">
+                                    R = 1111 1000<br/>
+                                    V = 1100 0100<br/>
+                                    B = 0011 1000
+                                </td>
+                                <td style="background-color:#f8c438; color:black;">
+                                    R = 1111 1000<br/>
+                                    V = 1100 0100<br/>
+                                    B = 0011 1000
+                                </td>
+                                <td style="background-color:#f8c438; color:black;">
+                                    R = 1111 1000<br/>
+                                    V = 1100 0100<br/>
+                                    B = 0011 1000
+                                </td>
+                                <td style="background-color:#f8c438; color:black;">
+                                    R = 1111 1000<br/>
+                                    V = 1100 0100<br/>
+                                    B = 0011 1000
+                                </td>
+                                <td style="background-color:#f8c438; color:black;">
+                                    R = 1111 1000<br/>
+                                    V = 1100 0100<br/>
+                                    B = 0011 1000
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </figure>
+            </div>
+            <div id="impactBit" class="slide animated absent">
+                <h1>Influence du choix du bit</h1>
+                <p>Modifier un des bits de l'image pour y cacher de l'information peut modifier la couleur du pixel accocié.</p>
+                <p>Pour que les modifications restent discrètes, on ne peut pas utiliser n'importe quel bit.</p>
+                <p>Voilà ce que l'on obtient en changeant 1 seul bit de la composante d'un pixel vert selon sa position :</p>
+                <div style="text-align: center">
+                    <div class="grand-pixel" style="background-color: #00ff00;">
+                        <p class="enbas">original</p>
+                    </div>
+                    <div style="display: inline-block; vertical-align: middle;">
+                        <input type="range" min="1" max="8" id="curseurImpact"><br/>
+                        <p>R = 0000 0000</p>
+                        <p id="pImpact">V = 1111 1111</p>
+                        <p>B = 0000 0000</p>
+                    </div>
+                    <div class="grand-pixel" id="pixelImpact">
+                        <p class="enbas">modifié</p>
+                    </div>
+                </div>
+            </div>
+            <div id="2.Recette" class="slide animated absent">
+                <h1 class="titre">2. Notre recette</h1>
+            </div>
+            <div id="recetteCacher" class="slide animated absent">
+                <h1>Notre recette pour cacher l'information</h1>
+                <p>Comme les modifications sur les premiers bits sont très visibles alors que celles sur les derniers bits sont à peine perceptibles (cela dépend des réglages de votre écran), nous cacherons l'information uniquement sur le dernier bit.</p>
+                <p>Par soucis de simplicité, nous cacherons les 8 bits d'un octet à cacher sur une même composante.
+                   Il nous faudra donc 8 pixels pour cacher un octet sur l'une des trois composantes.</p>
+                <p>A partir d'un pixel de référence, nous utiliserons 7 autres pixels proches selon le principe :</p>
+                <div class="centrer">
+                    <div style="display:inline-block; vertical-align:middle">
+                        <table class="raster">
+                            <tr>
+                                <td style="background-color:#39b9f8;"></td>
+                                <td style="background-color:#08ee7a;"></td>
+                                <td style="background-color:#08ee7a;"></td>
+                            </tr>
+                            <tr>
+                                <td style="background-color:#08ee7a;"></td>
+                                <td style="background-color:white;"></td>
+                                <td style="background-color:#08ee7a;"></td>
+                            </tr>
+                            <tr>
+                                <td style="background-color:#08ee7a;"></td>
+                                <td style="background-color:#08ee7a;"></td>
+                                <td style="background-color:#08ee7a;"></td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div style="display:inline-block; vertical-align:middle; margin-left:25px;">
+                        <p class="centrer">Légende :</p>
+                        <div class="pixel" style="background-color:#39b9f8;"></div>
+                        pixel de référence <br/>
+                        <div class="pixel" style="background-color:#08ee7a;"></div>
+                        autre pixel utilisé <br/>
+                        <div class="pixel" style="background-color:white;"></div>
+                        pixel non utilisé <br/>
+                    </div>
+                </div>
+            </div>
+            <div id="recetteCacherExemple" class="slide animated absent">
+                <h1>Notre recette pour cacher l'information</h1>
+                <figure>
+                    <figcaption><b>Exemple : </b><i>Survolez sur l'un des 8 bits pour savoir où le cacher.</i></figcaption>
+                    <p class="centrer">bits à cacher : <span id="cacherBit"> <span style="cursor:pointer"><span id="d1">1</span><span id="d2">0</span><span id="d3">0</span><span id="d4">1</span></span> <span style="cursor:pointer"><span id="d5">1</span><span id="d6">1</span><span id="d7">0</span><span id="d8">0</span></span></span></p>
+                    <div class="centrer">
+                        <table class="grand-raster">
+                            <tr>
+                                <td style="background-color:#39b9f8; color:black;">
+                                    R = 0011 100<span id="ad1">0</span><br/>
+                                    V = 1011 1001<br/>
+                                    B = 1111 1000
+                                </td>
+                                <td style="background-color:#39b9f8; color:black;">
+                                    R = 0011 100<span id="ad2">0</span><br/>
+                                    V = 1011 1001<br/>
+                                    B = 1111 1000
+                                </td>
+                                <td style="background-color:#39b9f8; color:black;">
+                                    R = 0011 100<span id="ad3">0</span><br/>
+                                    V = 1011 1001<br/>
+                                    B = 1111 1000
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="background-color:#39b9f8; color:black;">
+                                    R = 0011 100<span id="ad8">0</span><br/>
+                                    V = 1011 1001<br/>
+                                    B = 1111 1000
+                                </td>
+                                <td style="background-color:#08ee7a; color:black;">
+                                    R = 0000 1000<br/>
+                                    V = 1110 1110<br/>
+                                    B = 0111 1010
+                                </td>
+                                <td style="background-color:#39b9f8; color:black;">
+                                    R = 0011 100<span id="ad4">0</span><br/>
+                                    V = 1011 1001<br/>
+                                    B = 1111 1000
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="background-color:#f8c438; color:black;">
+                                    R = 1111 100<span id="ad7">0</span><br/>
+                                    V = 1100 0100<br/>
+                                    B = 0011 1000
+                                </td>
+                                <td style="background-color:#f8c438; color:black;">
+                                    R = 1111 100<span id="ad6">0</span><br/>
+                                    V = 1100 0100<br/>
+                                    B = 0011 1000
+                                </td>
+                                <td style="background-color:#f8c438; color:black;">
+                                    R = 1111 100<span id="ad5">0</span><br/>
+                                    V = 1100 0100<br/>
+                                    B = 0011 1000
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </figure>
+            </div>
+            <div id="cacherOctets" class="slide animated absent">
+                <h1>Cacher plusieurs octets</h1>
+                <p>Pour cacher plusieurs octets, un texte encodé en ascii par exemple, nous allons utilisé autant de blocs de 9 pixels.</p>
+                <figure>
+                    <figcaption><b>Exemple : Dans cette image de 36 pixels, le mot SNT (codé par 01010011 01001110 01010100), est caché dans 3 blocs de 9 pixels.</b></figcaption>
+                    <div class="centrer" style="position:relative;">
+                        <div style="display:inline-block; vertical-align:middle; margin-bottom:10px; margin-top:100px;">
+                            <table class="raster">
+                                <tr style="border-top:2px solid red;">
+                                    <td style="background-color:#39b9f8; border-left:2px solid red;"></td>
+                                    <td style="background-color:#08ee7a;"></td>
+                                    <td style="background-color:#08ee7a; border-right:2px solid red;"></td>
+                                    <td style="background-color:#39b9f8;"></td>
+                                    <td style="background-color:#08ee7a;"></td>
+                                    <td style="background-color:#08ee7a; border-right:2px solid red;"></td>
+                                </tr>
+                                <tr>
+                                    <td style="background-color:#08ee7a; border-left:2px solid red;"></td>
+                                    <td style="background-color:white;"></td>
+                                    <td style="background-color:#08ee7a; border-right:2px solid red;"></td>
+                                    <td style="background-color:#08ee7a;"></td>
+                                    <td style="background-color:white;"></td>
+                                    <td style="background-color:#08ee7a; border-right:2px solid red;"></td>
+                                </tr>
+                                <tr>
+                                    <td style="background-color:#08ee7a; border-left:2px solid red;"></td>
+                                    <td style="background-color:#08ee7a;"></td>
+                                    <td style="background-color:#08ee7a; border-right:2px solid red;"></td>
+                                    <td style="background-color:#08ee7a;"></td>
+                                    <td style="background-color:#08ee7a;"></td>
+                                    <td style="background-color:#08ee7a; border-right:2px solid red;"></td>
+                                </tr>
+                                <tr style="border-top:2px solid red;">
+                                    <td style="background-color:#39b9f8; border-left:2px solid red;"></td>
+                                    <td style="background-color:#08ee7a;"></td>
+                                    <td style="background-color:#08ee7a; border-right:2px solid red;"></td>
+                                    <td style="background-color:#39b9f8;"></td>
+                                    <td style="background-color:#08ee7a;"></td>
+                                    <td style="background-color:#08ee7a; border-right:2px solid red;"></td>
+                                </tr>
+                                <tr>
+                                    <td style="background-color:#08ee7a; border-left:2px solid red;"></td>
+                                    <td style="background-color:white;"></td>
+                                    <td style="background-color:#08ee7a; border-right:2px solid red;"></td>
+                                    <td style="background-color:#08ee7a;"></td>
+                                    <td style="background-color:white;"></td>
+                                    <td style="background-color:#08ee7a; border-right:2px solid red;"></td>
+                                </tr>
+                                <tr style="border-bottom:2px solid red; border-left:2px solid red;">
+                                    <td style="background-color:#08ee7a;"></td>
+                                    <td style="background-color:#08ee7a;"></td>
+                                    <td style="background-color:#08ee7a; border-right:2px solid red;"></td>
+                                    <td style="background-color:#08ee7a;"></td>
+                                    <td style="background-color:#08ee7a;"></td>
+                                    <td style="background-color:#08ee7a; border-right:2px solid red;"></td>
+                                </tr>
+                            </table>
+                        </div>
+                        <span style="position: absolute; top:0px; left:-35px;">S</span>
+                        <span style="position: absolute; top:25px; left:-90px;">0101&nbsp;0011</span>
+                        <span style="position: absolute; top:0px; left:126px;">N</span>
+                        <span style="position: absolute; top:25px; left:71px;">0101&nbsp;0011</span>
+                        <span style="position: absolute; top:0px; left:287px;">T</span>
+                        <span style="position: absolute; top:25px; left:232px;">0101&nbsp;0011</span>
+                        <span style="position: absolute; top:235px; left:290px; width:max-content;">bloc de pixels</span>
+                        <span style="position: absolute; top:260px; left:290px; width:max-content;">non utilisé</span>
+                        <canvas id="canvasCacherOctets"></canvas>
+                    </div>
+                </figure>
+            </div>
+            <div id="recetteCacherExercice" class="slide animated absent">
+                <h1>Cacher plusieurs octets</h1>
+                <figure>
+                    <figcaption><b>Exercice : Si le pixel de référence a pour coordonnées (6 ; 21), quelles sont les coordonnées des 7 autres pixels utilisés ?</b></figcaption>
+                    <div class="centrer" style="position:relative;">
+                        <div style="display:inline-block; vertical-align:middle; margin-bottom:10px; margin-top:80px;">
+                            <table class="raster">
+                                <tr>
+                                    <td style="background-color:#39b9f8;"></td>
+                                    <td style="background-color:#08ee7a;"></td>
+                                    <td style="background-color:#08ee7a;"></td>
+                                </tr>
+                                <tr>
+                                    <td style="background-color:#08ee7a;"></td>
+                                    <td style="background-color:white;"></td>
+                                    <td style="background-color:#08ee7a;"></td>
+                                </tr>
+                                <tr>
+                                    <td style="background-color:#08ee7a;"></td>
+                                    <td style="background-color:#08ee7a;"></td>
+                                    <td style="background-color:#08ee7a;"></td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div style="display:inline-block; vertical-align:middle; margin-left:25px;">
+                            <p class="centrer">Légende :</p>
+                            <div class="pixel" style="background-color:#39b9f8;"></div>
+                            pixel de référence <br/>
+                            <div class="pixel" style="background-color:#08ee7a;"></div>
+                            autre pixel utilisé <br/>
+                            <div class="pixel" style="background-color:white;"></div>
+                            pixel non utilisé <br/>
+                        </div>
+                        <span style="position: absolute; top:30px; left:50px;">x</span>
+                        <span style="position: absolute; top:120px; left:-40px;">y</span>
+                        <canvas id="canvasCacherExercice"></canvas>
+                    </div>
+                </figure>
+            </div>
+            <div id="extraireTexte" class="slide animated absent">
+                <h1>Extraire un mot</h1>
+                <figure>
+                    <figcaption><b>Exercice : quel mot de 6 lettres est caché (encodé en ASCII) selon notre recette dans la composante bleue de cette image ?</b></figcaption>
+                    <div class="centrer">
+                        <div class="side" style="margin-top:10px">
+                            <table class="raster" id="tableExercice" style="cursor: pointer">
+                                <tr>
+                                    <td style="background-color:#009246;"></td>
+                                    <td style="background-color:#019347;"></td>
+                                    <td style="background-color:#009246;"></td>
+                                    
+                                    <td style="background-color:#fefefe;"></td>
+                                    <td style="background-color:#ffffff;"></td>
+                                    <td style="background-color:#fefefe;"></td>
+                                    
+                                    <td style="background-color:#ce2a36;"></td>
+                                    <td style="background-color:#cf2b37;"></td>
+                                    <td style="background-color:#ce2a36;"></td>
+                                </tr>
+                                <tr>
+                                    <td style="background-color:#009346;"></td>
+                                    <td style="background-color:#009246;"></td>
+                                    <td style="background-color:#009246;"></td>
+                                    
+                                    <td style="background-color:#fffeff;"></td>
+                                    <td style="background-color:#ffffff;"></td>
+                                    <td style="background-color:#fefffe;"></td>
+                                    
+                                    <td style="background-color:#cf2a37;"></td>
+                                    <td style="background-color:#ce2b37;"></td>
+                                    <td style="background-color:#ce2b37;"></td>
+                                </tr>
+                                <tr>
+                                    <td style="background-color:#019246;"></td>
+                                    <td style="background-color:#019346;"></td>
+                                    <td style="background-color:#009247;"></td>
+                                    
+                                    <td style="background-color:#feffff;"></td>
+                                    <td style="background-color:#fefeff;"></td>
+                                    <td style="background-color:#fffeff;"></td>
+                                    
+                                    <td style="background-color:#ce2b36;"></td>
+                                    <td style="background-color:#ce2a37;"></td>
+                                    <td style="background-color:#ce2a36;"></td>
+                                </tr>
+                                
+                                <tr>
+                                    <td style="background-color:#009246;"></td>
+                                    <td style="background-color:#019347;"></td>
+                                    <td style="background-color:#009246;"></td>
+                                    
+                                    <td style="background-color:#fefefe;"></td>
+                                    <td style="background-color:#ffffff;"></td>
+                                    <td style="background-color:#fefefe;"></td>
+                                    
+                                    <td style="background-color:#ce2a36;"></td>
+                                    <td style="background-color:#cf2b37;"></td>
+                                    <td style="background-color:#ce2a36;"></td>
+                                </tr>
+                                <tr>
+                                    <td style="background-color:#019346;"></td>
+                                    <td style="background-color:#009246;"></td>
+                                    <td style="background-color:#019247;"></td>
+                                    
+                                    <td style="background-color:#fffffe;"></td>
+                                    <td style="background-color:#ffffff;"></td>
+                                    <td style="background-color:#feffff;"></td>
+                                    
+                                    <td style="background-color:#cf2a37;"></td>
+                                    <td style="background-color:#ce2b37;"></td>
+                                    <td style="background-color:#ce2b36;"></td>
+                                </tr>
+                                <tr>
+                                    <td style="background-color:#019247;"></td>
+                                    <td style="background-color:#009346;"></td>
+                                    <td style="background-color:#009246;"></td>
+                                    
+                                    <td style="background-color:#fffeff;"></td>
+                                    <td style="background-color:#fefffe;"></td>
+                                    <td style="background-color:#fefefe;"></td>
+                                    
+                                    <td style="background-color:#cf2b36;"></td>
+                                    <td style="background-color:#cf2a36;"></td>
+                                    <td style="background-color:#cf2a36;"></td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="side" id="infoPixel" style="width:245px; margin-left:10px">
+                            <p>Cliquez sur un pixel.</p>
+                        </div>
+                    </div>
+                </figure>
+            </div>
+            <div id="4.CacherImage" class="slide animated absent">
+                <h1 class="titre">4. Cacher une image</h1>
+            </div>
+            <div id="cacherImage" class="slide animated absent">
+                <h1>Cacher une image</h1>
+                <p>Pour cacher une image, il faut cacher les valeurs des composantes de chacun de ses pixels.</p>
+                <p>Ainsi, pour chaque pixel de l'image à cacher, il faut cacher 3 octets.</p>
+                <p>En utilisant les 3 composantes pour cacher ces 3 octets, l'image où on dissimulera l'autre doit avoir 3 fois plus de pixels.</p>
+            </div>
+            <div id="cacherImageExemple" class="slide animated absent">
+                <figure>
+                    <figcaption><b>Exemple : </b><i>Survolez sur l'un des bits du pixel à cacher pour savoir où le cacher.</i></figcaption>
+                    <div class="centrer">
+                        <span class="centrer">pixel à cacher :</span>
+                        <div class="pixel" style="background-color:#e74c3c;"></div>
+                    </div>
+                    <p class="centrer">R = <span id="cacherBitR"> <span style="cursor:pointer"><span id="r1">1</span><span id="r2">0</span><span id="r3">0</span><span id="r4">1</span></span> <span style="cursor:pointer"><span id="r5">1</span><span id="r6">1</span><span id="r7">0</span><span id="r8">0</span></span></span></p>
+                    <p class="centrer">V = <span id="cacherBitV"> <span style="cursor:pointer"><span id="v1">1</span><span id="v2">0</span><span id="v3">0</span><span id="v4">1</span></span> <span style="cursor:pointer"><span id="v5">1</span><span id="v6">1</span><span id="v7">0</span><span id="v8">0</span></span></span></p>
+                    <p class="centrer">B = <span id="cacherBitB"> <span style="cursor:pointer"><span id="b1">1</span><span id="b2">0</span><span id="b3">0</span><span id="b4">1</span></span> <span style="cursor:pointer"><span id="b5">1</span><span id="b6">1</span><span id="b7">0</span><span id="b8">0</span></span></span></p>
+                    <div class="centrer">
+                        <table class="grand-raster">
+                            <tr>
+                                <td style="background-color:#39b9f8; color:black;">
+                                    R = 0011 100<span id="ar1">0</span><br/>
+                                    V = 1011 100<span id="av1">1</span><br/>
+                                    B = 1111 100<span id="ab1">0</span>
+                                </td>
+                                <td style="background-color:#39b9f8; color:black;">
+                                    R = 0011 100<span id="ar2">0</span><br/>
+                                    V = 1011 100<span id="av2">1</span><br/>
+                                    B = 1111 100<span id="ab2">0</span>
+                                </td>
+                                <td style="background-color:#39b9f8; color:black;">
+                                    R = 0011 100<span id="ar3">0</span><br/>
+                                    V = 1011 100<span id="av3">1</span><br/>
+                                    B = 1111 100<span id="ab3">0</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="background-color:#39b9f8; color:black;">
+                                    R = 0011 100<span id="ar8">0</span><br/>
+                                    V = 1011 100<span id="av8">1</span><br/>
+                                    B = 1111 100<span id="ab8">0</span>
+                                </td>
+                                <td style="background-color:#08ee7a; color:black;">
+                                    R = 0000 1000<br/>
+                                    V = 1110 1110<br/>
+                                    B = 0111 1010
+                                </td>
+                                <td style="background-color:#39b9f8; color:black;">
+                                    R = 0011 100<span id="ar4">0</span><br/>
+                                    V = 1011 100<span id="av4">1</span><br/>
+                                    B = 1111 100<span id="ab4">0</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="background-color:#f8c438; color:black;">
+                                    R = 1111 100<span id="ar7">0</span><br/>
+                                    V = 1100 010<span id="av7">0</span><br/>
+                                    B = 0011 100<span id="ab7">0</span>
+                                </td>
+                                <td style="background-color:#f8c438; color:black;">
+                                    R = 1111 100<span id="ar6">0</span><br/>
+                                    V = 1100 010<span id="av6">0</span><br/>
+                                    B = 0011 100<span id="ab6">0</span>
+                                </td>
+                                <td style="background-color:#f8c438; color:black;">
+                                    R = 1111 100<span id="ar5">0</span><br/>
+                                    V = 1100 010<span id="av5">0</span><br/>
+                                    B = 0011 100<span id="ab5">0</span>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </figure>
+            </div>
+        </div>
+        <div class="controlles">
+            <button id="precedente">&lt;</button>
+            <div class="message"></div>
+            <button id="suivante">&gt;</button>
+        </div>
+        <script type="text/javascript">
+            const divAnimation = document.querySelector('div.animation')
+            const pMessage = document.querySelector('div.message')
+            const btnSuivante = document.getElementById('suivante')
+            const btnPrecedente = document.getElementById('precedente')
+            const curseurImpact = document.getElementById('curseurImpact')
+            const tableExercice = document.getElementById('tableExercice')
+
+            var no = -1
+            const etapes = [
+                {
+                    entrees: ["1.Principe"],
+                    sorties: [],
+                    special: []
+                },
+                {
+                    entrees: ["definition"],
+                    sorties: ["1.Principe"],
+                    special: []
+                },
+                {
+                    entrees: ["cacherOctet"],
+                    sorties: ["definition"],
+                    special: []
+                },
+                {
+                    entrees: ["cacherOctetExemple"],
+                    sorties: ["cacherOctet"],
+                    special: []
+                },
+                {
+                    entrees: ["impactBit"],
+                    sorties: ["cacherOctetExemple"],
+                    special: []
+                },
+                {
+                    entrees: ["2.Recette"],
+                    sorties: ["impactBit"],
+                    special: []
+                },
+                {
+                    entrees: ["recetteCacher"],
+                    sorties: ["2.Recette"],
+                    special: []
+                },
+                {
+                    entrees: ["recetteCacherExemple"],
+                    sorties: ["recetteCacher"],
+                    special: []
+                },
+                {
+                    entrees: ["cacherOctets"],
+                    sorties: ["recetteCacherExemple"],
+                    special: []
+                },
+                {
+                    entrees: ["recetteCacherExercice"],
+                    sorties: ["cacherOctets"],
+                    special: []
+                },
+                {
+                    entrees: ["extraireTexte"],
+                    sorties: ["recetteCacherExercice"],
+                    special: []
+                },
+                {
+                    entrees: ["4.CacherImage"],
+                    sorties: ["extraireTexte"],
+                    special: []
+                },
+                {
+                    entrees: ["cacherImage"],
+                    sorties: ["4.CacherImage"],
+                    special: []
+                },
+                {
+                    entrees: ["cacherImageExemple"],
+                    sorties: ["cacherImage"],
+                    special: []
+                },
+            ]
+            var pixel = null
+
+
+            function suivante(evenement) {
+                if (no < etapes.length - 1) {
+                    no += 1
+                    etapes[no].token = Math.random()
+                    // gestions des entrées
+                    for (const nom of etapes[no].entrees) {
+                        document.getElementById(nom).classList.remove("absent")
+                    }
+                    // gestions des sorties
+                    for (const nom of etapes[no].sorties) {
+                        document.getElementById(nom).classList.add("absent")
+                    }
+                    // gestions des animations speciales
+                    for (const fonction of etapes[no].special) {
+                        fonction()
+                    }
+                }
+                // gestion de l'affichage des boutons
+                if (no == etapes.length - 1) {
+                    btnSuivante.style.visibility = "hidden";
+                }
+                btnPrecedente.style.visibility = "visible";
+            }
+
+            function precedente(evenement) {
+                if (no > 0) {
+                    // gestions des entrées
+                    for (const nom of etapes[no].sorties) {
+                        document.getElementById(nom).classList.remove("absent")
+                    }
+                    // gestions des sorties
+                    for (const nom of etapes[no].entrees) {
+                        document.getElementById(nom).classList.add("absent")
+                    }
+                    no -= 1
+                    etapes[no].token = Math.random()
+                    // gestions des animations speciales
+                    for (const fonction of etapes[no].special) {
+                        fonction()
+                    }
+                }
+                // gestion de l'affichage des boutons
+                if (no == 0) {
+                    btnPrecedente.style.visibility = "hidden";
+                } else {
+                    btnSuivante.style.visibility = "visible";
+                }
+            }
+
+            function impact(evenement) {
+                const V = "1".repeat(curseurImpact.value-1) + "0" + "1".repeat(8 - curseurImpact.value)
+                const vert = `rgb(0, ${parseInt(V, 2)}, 0)`
+                document.getElementById("pImpact").textContent = `V = ${V.substring(0, 4)} ${V.substring(4, 8)}`
+                document.getElementById("pixelImpact").style.backgroundColor = vert
+            }
+
+            function cacherBit(evenement) {
+                if (["d", "r", "v", "b"].indexOf(evenement.target.id.substr(0,1))>-1) {
+                    for (let i=1; i<9; i++) {
+                        for (lettre of ["d", "r", "v", "b"]) {
+                            const spanD = document.getElementById(`${lettre}${i}`)
+                            const spanA = document.getElementById(`a${lettre}${i}`)
+                            spanD.style.color = "white"
+                            spanA.style.color = "black"
+                            spanA.style.fontWeight = "normal"
+                            spanA.textContent = "0"
+                        }
+                    }
+                    const spanD = evenement.target
+                    const spanA = document.getElementById("a"+evenement.target.id)
+                    spanD.style.color = "red"
+                    spanA.style.color = "red"
+                    spanA.style.fontWeight = "bold"
+                    spanA.textContent = spanD.textContent
+                }
+            }
+
+            function extraire(evenement) {
+                if (evenement.target.tagName = "TD") {
+                    if (pixel) {pixel.style.boxShadow = "none"}
+                    pixel = evenement.target
+                    pixel.style.boxShadow = "inset 2px 2px gold, inset -2px -2px gold";
+                    const C = pixel.style.backgroundColor.match(/\d+/g);
+                    const B = C.map(c => {
+                        var binaire = parseInt(c).toString(2)
+                        binaire = "0".repeat(8-binaire.length) + binaire
+                        return `${binaire.substring(0, 4)} ${binaire.substring(4, 8)}`
+                    })
+                    const div = document.getElementById("infoPixel")
+                    div.innerHTML = `<p>R = ${B[0]}</p><p>V = ${B[1]}</p><p>B = ${B[2]}</p>`
+                }
+            }
+
+            tableExercice.addEventListener("click", extraire)
+            curseurImpact.addEventListener("input", impact)
+            impact()
+
+            document.getElementById("cacherBit").addEventListener("mouseover", cacherBit)
+            document.getElementById("cacherBitR").addEventListener("mouseover", cacherBit)
+            document.getElementById("cacherBitV").addEventListener("mouseover", cacherBit)
+            document.getElementById("cacherBitB").addEventListener("mouseover", cacherBit)
+
+            btnPrecedente.addEventListener("click", precedente)
+            btnSuivante.addEventListener("click", suivante)
+            suivante()
+            btnPrecedente.style.visibility = "hidden";
+
+            // Canvas
+
+            function fleche(canvas, xA, yA, xB, yB) {
+                const ctx = canvas.getContext('2d');
+                ctx.strokeStyle = 'white'
+                ctx.lineWidth = 2
+                // Calculs des coordonnées des points C, D et E 
+                AB=Math.sqrt(Math.pow(xB-xA,2)+Math.pow(yB-yA,2));
+                xC=xB+4*(xA-xB)/AB;
+                yC=yB+4*(yA-yB)/AB; 
+                xD=xC+5*(-(yB-yA))/AB;
+                yD=yC+5*((xB-xA))/AB; 
+                xE=xC-5*(-(yB-yA))/AB;
+                yE=yC-5*((xB-xA))/AB; 
+                // et on trace le segment [AB], et sa flèche: 
+                ctx.beginPath(); 
+                ctx.moveTo(xA,yA);
+                ctx.lineTo(xB,yB); 
+                ctx.moveTo(xD,yD);
+                ctx.lineTo(xB,yB);
+                ctx.lineTo(xE,yE); 
+                ctx.stroke(); 
+            }
+
+            const canvasCacherOctets = document.getElementById('canvasCacherOctets');
+            canvasCacherOctets.width =  362;
+            canvasCacherOctets.height = 362;
+            fleche(canvasCacherOctets, 25, 50, 70, 120);
+            fleche(canvasCacherOctets, 186, 50, 200, 120);
+            fleche(canvasCacherOctets, 347, 50, 70, 250);
+            fleche(canvasCacherOctets, 200, 250, 330, 250);
+
+            const canvasCacherExercice = document.getElementById('canvasCacherExercice');
+            canvasCacherExercice.width =  532;
+            canvasCacherExercice.height = 200;
+            fleche(canvasCacherExercice, 29, 40, 180, 40);
+            fleche(canvasCacherExercice, 30, 39, 30, 190);
+        </script>
+    </body>
+</html>
